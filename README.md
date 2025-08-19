@@ -1,6 +1,6 @@
 # GameHub — Frontend (Next.js + Tailwind)
 
-Frontend para la tienda de videojuegos que consume la API Express/Mongo entregada.
+Frontend para la tienda de videojuegos que consume la API Express/Mongo.
 
 ## Requisitos
 - Node.js 18+
@@ -26,22 +26,21 @@ Frontend para la tienda de videojuegos que consume la API Express/Mongo entregad
    ```
 
 ## Funcionalidades
-- **Tienda**: listado de productos, agregar al carrito.
+- **Tienda**: listado de productos, **barra de búsqueda** (nombre, SKU, plataforma, marca), agregar al carrito.
 - **Carrito**: editar cantidades, eliminar, total, **checkout** con formulario (customerId y método de pago) y **diálogo de compra exitosa**.
-- **Administrador**: listar, crear, editar (PATCH) y eliminar productos.
+- **Administrador**:
+  - **Productos**: listar, buscar, crear, editar (PATCH) y eliminar.
+  - **Ventas**: listar todas las ventas y **buscar** por ID, producto, cliente o método de pago.
 - **Responsive**: teléfonos, tablets y desktop.
-- **Validación**: los formularios envían JSON (`Content-Type: application/json`) según lo requerido por la API.
+- **Validación**: los formularios envían JSON (`Content-Type: application/json`) según la API.
 
-## Notas de implementación
-- El backend exige `customerId` válido como ObjectId. Si no manejas clientes, el formulario de checkout usa por defecto `000000000000000000000000` (válido sintácticamente).
+## Notas
+- El backend exige `customerId` con formato de **Mongo ObjectId**. Si no manejas clientes, el checkout usa por defecto `000000000000000000000000`.
 - La API no expone `GET /products/:id`, así que la vista de edición trae el listado y filtra por `_id`.
-- Campos requeridos para crear productos: `name`, `type` (`game|console`), `price`, `quantity`, `sku`, `platform`, `brand`, `status` (`active|inactive|discontinued`).
 
 ## Estructura
 - `app/` app router de Next.js
-- `components/` UI reutilizable (Header, ProductCard, Modal, ProductForm)
+- `components/` UI reutilizable (Header, ProductCard, Modal, ProductForm, SearchBar)
 - `context/CartContext.jsx` estado global del carrito con `localStorage`
 - `lib/api.js` cliente fetch hacia la API
-- `lib/utils.js` utilidades (formato moneda)
-
-¡Listo para conectar con tu backend!
+- `lib/utils.js` utilidades (formato moneda/fecha y normalización)

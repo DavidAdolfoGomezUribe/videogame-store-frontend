@@ -15,7 +15,8 @@ export default function Header() {
 
         <nav className="flex items-center gap-2 sm:gap-3">
           <Link href="/" className="btn">Tienda</Link>
-          <Link href="/admin/products" className="btn">Admin</Link>
+          <Link href="/admin/products" className="btn">Admin · Productos</Link>
+          <Link href="/admin/sales" className="btn">Admin · Ventas</Link>
           <Link href="/cart" className="btn relative">
             Carrito
             <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-indigo-600 text-white text-xs px-1">

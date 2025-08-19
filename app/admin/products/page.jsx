@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiDelete, apiGet } from "@/lib/api";
-import { money } from "@/lib/utils";
+import { money, normalize } from "@/lib/utils";
+import SearchBar from "@/components/SearchBar";
 
 export default function AdminProductsPage() {
   const [rows, setRows] = useState([]);
+  const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -35,11 +37,25 @@ export default function AdminProductsPage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    const nq = normalize(q);
+    if (!nq) return rows;
+    return rows.filter(p => {
+      const haystack = normalize([p.name, p.type, p.platform, p.brand, p.sku, p.status].filter(Boolean).join(" "));
+      return haystack.includes(nq);
+    });
+  }, [rows, q]);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold">Productos</h1>
-        <Link href="/admin/products/new" className="btn btn-primary">Nuevo producto</Link>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="w-full sm:w-80">
+            <SearchBar value={q} onChange={setQ} placeholder="Buscar por nombre, SKU, plataforma, marca..." />
+          </div>
+          <Link href="/admin/products/new" className="btn btn-primary shrink-0">Nuevo producto</Link>
+        </div>
       </div>
 
       {error ? <div className="text-red-400">{error}</div> : null}
@@ -63,7 +79,7 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(p => (
+              {filtered.map(p => (
                 <tr key={p._id}>
                   <td className="font-medium">{p.name}</td>
                   <td>{p.type}</td>
@@ -74,7 +90,7 @@ export default function AdminProductsPage() {
                   <td>{p.brand}</td>
                   <td>
                     <span className={
-                      "px-2 py-1 rounded text-xs " + 
+                      "badge " + 
                       (p.status === "active" ? "bg-green-500/20 text-green-300" :
                        p.status === "inactive" ? "bg-yellow-500/20 text-yellow-300" :
                        "bg-red-500/20 text-red-300")
@@ -90,6 +106,9 @@ export default function AdminProductsPage() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 ? (
+                <tr><td colSpan="9" className="text-center text-gray-400 py-6">Sin resultados para “{q}”.</td></tr>
+              ) : null}
             </tbody>
           </table>
         )}
