@@ -8,9 +8,9 @@ import { normalize } from "@/lib/utils";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
-  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [term, setTerm] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -29,24 +29,21 @@ export default function ShopPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    const nq = normalize(q);
-    if (!nq) return products;
+    const q = normalize(term);
+    if (!q) return products;
     return products.filter(p => {
-      const haystack = normalize([p.name, p.type, p.platform, p.brand, p.sku].filter(Boolean).join(" "));
-      return haystack.includes(nq);
+      const hay = [p.name, p.platform, p.brand, p.sku].map(normalize).join(" ");
+      return hay.includes(q);
     });
-  }, [products, q]);
+  }, [products, term]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl sm:text-3xl font-bold">Tienda</h1>
-        <div className="w-full sm:w-80">
-          <SearchBar value={q} onChange={setQ} placeholder="Buscar por nombre, plataforma, marca, SKU..." />
-        </div>
+        <SearchBar placeholder="Buscar por nombre, plataforma, marca o SKU..." onChange={setTerm} />
       </div>
-
-      {error ? <div className="text-red-400">{error}</div> : null}
+      {error ? <div className="text-red-500">{error}</div> : null}
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -56,7 +53,7 @@ export default function ShopPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(p => <ProductCard key={p._id} product={p} />)}
-          {filtered.length === 0 ? <div className="text-gray-400">No hay resultados para “{q}”.</div> : null}
+          {filtered.length === 0 ? <div className="text-sm" style={{color:"rgb(var(--muted) / 1)"}}>Sin resultados</div> : null}
         </div>
       )}
     </div>

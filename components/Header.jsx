@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Header() {
   const { count } = useCart();
 
   return (
-    <header className="border-b border-white/10">
+    <header className="border-b" style={{borderColor: "rgb(var(--border) / 1)"}}>
       <div className="container-max flex items-center justify-between py-4 gap-4">
         <Link href="/" className="text-xl sm:text-2xl font-bold">
-          <span className="text-indigo-400">Game</span>Hub
+          <span style={{color:"rgb(var(--primary) / 1)"}}>Game</span>Hub
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-3">
@@ -19,10 +20,11 @@ export default function Header() {
           <Link href="/admin/sales" className="btn">Admin · Ventas</Link>
           <Link href="/cart" className="btn relative">
             Carrito
-            <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-indigo-600 text-white text-xs px-1">
+            <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full text-white text-xs px-1" style={{backgroundColor:"rgb(var(--primary) / 1)"}}>
               {count}
             </span>
           </Link>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

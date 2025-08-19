@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiPatch, apiPost } from "@/lib/api";
+import { useNotify } from "@/context/NotifyContext";
 
 const STATUS = ["active", "inactive", "discontinued"];
 const TYPES = ["game", "console"];
@@ -20,10 +21,9 @@ export default function ProductForm({ initial, mode = "create", onSuccess }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { notify } = useNotify();
 
-  function set(k, v) {
-    setForm(prev => ({ ...prev, [k]: v }));
-  }
+  function set(k, v) { setForm(prev => ({ ...prev, [k]: v })); }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -32,17 +32,11 @@ export default function ProductForm({ initial, mode = "create", onSuccess }) {
 
     try {
       if (mode === "create") {
-        await apiPost("/products", {
-          ...form,
-          price: Number(form.price),
-          quantity: Number(form.quantity),
-        });
+        await apiPost("/products", { ...form, price: Number(form.price), quantity: Number(form.quantity) });
+        notify({ title: "Producto creado", message: `Se creó “${form.name}”.` });
       } else {
-        await apiPatch(`/products/${initial._id}`, {
-          ...form,
-          price: Number(form.price),
-          quantity: Number(form.quantity),
-        });
+        await apiPatch(`/products/${initial._id}`, { ...form, price: Number(form.price), quantity: Number(form.quantity) });
+        notify({ title: "Producto actualizado", message: `Se guardaron los cambios de “${form.name}”.` });
       }
       onSuccess?.();
     } catch (err) {
@@ -55,7 +49,7 @@ export default function ProductForm({ initial, mode = "create", onSuccess }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {error ? <div className="text-red-400 text-sm">{error}</div> : null}
+      {error ? <div className="text-red-500 text-sm">{error}</div> : null}
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>

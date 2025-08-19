@@ -2,87 +2,78 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "@/lib/api";
-import { formatDateTime, money, normalize } from "@/lib/utils";
+import { formatDate, money, normalize } from "@/lib/utils";
 import SearchBar from "@/components/SearchBar";
-
-function itemsSummary(items) {
-  if (!Array.isArray(items) || items.length === 0) return "-";
-  const names = items.map(i => `${i.name} ×${i.quantity}`);
-  if (names.length <= 3) return names.join(", ");
-  return names.slice(0, 3).join(", ") + ` +${names.length - 3} más`;
-}
 
 export default function AdminSalesPage() {
   const [rows, setRows] = useState([]);
-  const [q, setQ] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [term, setTerm] = useState("");
 
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await apiGet("/sales");
-      setRows(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setError("No se pudo cargar el listado de ventas.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load(){
+      setLoading(true);
+      setError("");
+      try {
+        const data = await apiGet("/sales");
+        setRows(Array.isArray(data) ? data : []);
+      } catch {
+        setError("No se pudieron cargar las ventas.");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-
-  useEffect(() => { load(); }, []);
+    load();
+  }, []);
 
   const filtered = useMemo(() => {
-    const nq = normalize(q);
-    if (!nq) return rows;
+    const q = normalize(term);
+    if (!q) return rows;
     return rows.filter(s => {
-      const itemNames = (s.items || []).map(i => i.name).join(" ");
-      const haystack = normalize([
-        s._id, s.paymentMethod, s.status, s.customerId, itemNames
-      ].filter(Boolean).join(" "));
-      return haystack.includes(nq);
+      const items = (s.items || []).map(it => `${it.name} ${it.type}`).join(" ");
+      const hay = [s._id, s.paymentMethod, s.customerId, items].map(x => normalize(String(x || ""))).join(" ");
+      return hay.includes(q);
     });
-  }, [rows, q]);
+  }, [rows, term]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl sm:text-3xl font-bold">Ventas</h1>
-        <div className="w-full sm:w-96">
-          <SearchBar value={q} onChange={setQ} placeholder="Buscar por ID, producto, cliente, método..." />
-        </div>
+        <SearchBar placeholder="Buscar por ID, producto, cliente o método..." onChange={setTerm} />
       </div>
 
-      {error ? <div className="text-red-400">{error}</div> : null}
+      {error ? <div className="text-red-500">{error}</div> : null}
 
       <div className="card overflow-x-auto">
-        {loading ? (
-          <div className="animate-pulse h-24" />
-        ) : (
+        {loading ? <div className="animate-pulse h-24" /> : (
           <table className="table">
             <thead>
               <tr>
                 <th>Fecha</th>
+                <th>ID</th>
                 <th>Método</th>
-                <th className="text-right">Total</th>
+                <th>Total</th>
                 <th>Items</th>
-                <th>ID Venta</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(s => (
                 <tr key={s._id}>
-                  <td>{formatDateTime(s.datetime || s.createdAt)}</td>
-                  <td><span className="badge bg-white/10">{s.paymentMethod}</span></td>
-                  <td className="text-right font-semibold">{money(s.total)}</td>
-                  <td className="max-w-[420px] truncate">{itemsSummary(s.items)}</td>
+                  <td>{formatDate(s.datetime || s.createdAt)}</td>
                   <td className="font-mono text-xs">{s._id}</td>
+                  <td>{s.paymentMethod}</td>
+                  <td className="font-semibold">{money(s.total)}</td>
+                  <td className="text-sm">
+                    <ul className="list-disc pl-5">
+                      {s.items?.map((it, idx) => (
+                        <li key={idx}>{it.name} × {it.quantity} ({money(it.unitPrice)})</li>
+                      ))}
+                    </ul>
+                  </td>
                 </tr>
               ))}
-              {filtered.length === 0 ? (
-                <tr><td colSpan="5" className="text-center text-gray-400 py-6">Sin resultados para “{q}”.</td></tr>
-              ) : null}
             </tbody>
           </table>
         )}

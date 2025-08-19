@@ -2,13 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default to dark; ThemeProvider toggles 'dark' class on <html> */
+html { height: 100%; }
+body { min-height: 100%; }
+
+/* Light */
 :root {
-  --bg: 18 18 18;
-  --fg: 245 245 245;
+  --bg: 248 250 252; /* slate-50 */
+  --fg: 15 23 42;    /* slate-900 */
+  --card: 255 255 255; /* white */
+  --muted: 100 116 139; /* slate-500 */
+  --border: 226 232 240; /* slate-200 */
+  --primary: 79 70 229; /* indigo-600 */
 }
 
-html, body {
-  height: 100%;
+/* Dark */
+html.dark {
+  --bg: 18 18 18;
+  --fg: 245 245 245;
+  --card: 23 23 23;
+  --muted: 156 163 175;
+  --border: 38 38 38;
+  --primary: 99 102 241; /* indigo-500/600 */
 }
 
 body {
@@ -16,40 +31,38 @@ body {
   color: rgb(var(--fg) / 1);
 }
 
-.container-max {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-}
+.container-max { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
 
 .card {
-  @apply bg-white/5 border border-white/10 rounded-2xl shadow p-4;
+  background-color: rgb(var(--card) / 1);
+  @apply border rounded-2xl shadow p-4;
+  border-color: rgb(var(--border) / 1);
 }
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition
-         border border-white/10 bg-white/10 hover:bg-white/20 active:scale-[.98];
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[.98];
+  border: 1px solid rgb(var(--border) / 1);
+  background-color: color-mix(in oklab, rgb(var(--card) / 1) 85%, rgb(var(--fg) / 1));
 }
+.btn:hover { filter: brightness(0.98); }
 
 .btn-primary {
-  @apply bg-indigo-600 border-indigo-500 hover:bg-indigo-500 text-white;
+  background-color: rgb(var(--primary) / 1);
+  color: white;
+  border-color: rgb(var(--primary) / 1);
 }
 
 .input, .select, .textarea {
-  @apply w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  @apply w-full rounded-xl px-3 py-2 focus:outline-none focus:ring-2;
+  background-color: rgb(var(--card) / 1);
+  border: 1px solid rgb(var(--border) / 1);
 }
 
-.table {
-  @apply w-full text-left;
-}
-.table th, .table td {
-  @apply px-3 py-2;
-}
+.table { @apply w-full text-left; }
+.table th, .table td { @apply px-3 py-2; }
 .table thead th {
-  @apply text-xs uppercase tracking-wider text-gray-300 border-b border-white/10;
+  @apply text-xs uppercase tracking-wider;
+  color: rgb(var(--muted) / 1);
+  border-bottom: 1px solid rgb(var(--border) / 1);
 }
-.table tbody tr {
-  @apply border-b border-white/5;
-}
-
-.badge {
-  @apply inline-flex items-center rounded-md px-2 py-1 text-xs font-medium;
-}
+.table tbody tr { border-bottom: 1px solid rgb(var(--border) / 1); }

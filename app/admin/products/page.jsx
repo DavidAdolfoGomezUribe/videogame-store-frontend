@@ -5,12 +5,14 @@ import { useEffect, useMemo, useState } from "react";
 import { apiDelete, apiGet } from "@/lib/api";
 import { money, normalize } from "@/lib/utils";
 import SearchBar from "@/components/SearchBar";
+import { useNotify } from "@/context/NotifyContext";
 
 export default function AdminProductsPage() {
   const [rows, setRows] = useState([]);
-  const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [term, setTerm] = useState("");
+  const { notify } = useNotify();
 
   async function load() {
     setLoading(true);
@@ -27,10 +29,11 @@ export default function AdminProductsPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function onDelete(id) {
+  async function onDelete(id, name) {
     if (!confirm("¿Eliminar este producto?")) return;
     try {
       await apiDelete(`/products/${id}`);
+      notify({ title: "Producto eliminado", message: `Se eliminó “${name}”.` });
       await load();
     } catch (e) {
       alert("Error al eliminar");
@@ -38,27 +41,22 @@ export default function AdminProductsPage() {
   }
 
   const filtered = useMemo(() => {
-    const nq = normalize(q);
-    if (!nq) return rows;
-    return rows.filter(p => {
-      const haystack = normalize([p.name, p.type, p.platform, p.brand, p.sku, p.status].filter(Boolean).join(" "));
-      return haystack.includes(nq);
-    });
-  }, [rows, q]);
+    const q = normalize(term);
+    if (!q) return rows;
+    return rows.filter(p => [p.name, p.platform, p.brand, p.sku].map(normalize).join(" ").includes(q));
+  }, [rows, term]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl sm:text-3xl font-bold">Productos</h1>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="w-full sm:w-80">
-            <SearchBar value={q} onChange={setQ} placeholder="Buscar por nombre, SKU, plataforma, marca..." />
-          </div>
-          <Link href="/admin/products/new" className="btn btn-primary shrink-0">Nuevo producto</Link>
+        <div className="flex items-center gap-2">
+          <SearchBar placeholder="Buscar productos..." onChange={setTerm} />
+          <Link href="/admin/products/new" className="btn btn-primary">Nuevo</Link>
         </div>
       </div>
 
-      {error ? <div className="text-red-400">{error}</div> : null}
+      {error ? <div className="text-red-500">{error}</div> : null}
 
       <div className="card overflow-x-auto">
         {loading ? (
@@ -89,26 +87,21 @@ export default function AdminProductsPage() {
                   <td>{p.platform}</td>
                   <td>{p.brand}</td>
                   <td>
-                    <span className={
-                      "badge " + 
-                      (p.status === "active" ? "bg-green-500/20 text-green-300" :
-                       p.status === "inactive" ? "bg-yellow-500/20 text-yellow-300" :
-                       "bg-red-500/20 text-red-300")
-                    }>
+                    <span className={"px-2 py-1 rounded text-xs " + 
+                      (p.status === "active" ? "bg-green-500/20 text-green-700 dark:text-green-300" :
+                       p.status === "inactive" ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300" :
+                       "bg-red-500/20 text-red-700 dark:text-red-300")}>
                       {p.status}
                     </span>
                   </td>
                   <td className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Link href={`/admin/products/${p._id}/edit`} className="btn">Editar</Link>
-                      <button className="btn" onClick={() => onDelete(p._id)}>Eliminar</button>
+                      <button className="btn" onClick={() => onDelete(p._id, p.name)}>Eliminar</button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 ? (
-                <tr><td colSpan="9" className="text-center text-gray-400 py-6">Sin resultados para “{q}”.</td></tr>
-              ) : null}
             </tbody>
           </table>
         )}

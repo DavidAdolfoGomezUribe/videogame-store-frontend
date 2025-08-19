@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { money } from "@/lib/utils";
 import { apiPost } from "@/lib/api";
 import Modal from "@/components/Modal";
+import { useNotify } from "@/context/NotifyContext";
 
 export default function CartPage() {
   const { items, setQty, remove, total, clear } = useCart();
@@ -13,6 +14,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
+  const { notify } = useNotify();
 
   async function checkout(e) {
     e.preventDefault();
@@ -34,6 +36,16 @@ export default function CartPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function onChangeQty(p, q){
+    setQty(p._id, Math.max(1, Number(q || 1)));
+    notify({ title: "Cantidad actualizada", message: `Nueva cantidad de “${p.name}”.` });
+  }
+
+  function onRemove(p){
+    remove(p._id);
+    notify({ title: "Artículo removido", message: `Se quitó “${p.name}” del carrito.` });
   }
 
   return (
@@ -59,8 +71,8 @@ export default function CartPage() {
                   <tr key={product._id}>
                     <td className="align-top">
                       <div className="font-medium">{product.name}</div>
-                      <div className="text-xs text-gray-400">{product.type} • {product.platform || product.brand}</div>
-                      <div className="text-xs text-gray-400">Precio: {money(product.price)}</div>
+                      <div className="text-xs" style={{color:"rgb(var(--muted) / 1)"}}>{product.type} • {product.platform || product.brand}</div>
+                      <div className="text-xs" style={{color:"rgb(var(--muted) / 1)"}}>Precio: {money(product.price)}</div>
                     </td>
                     <td>
                       <input
@@ -68,13 +80,13 @@ export default function CartPage() {
                         min="1"
                         max={product.quantity}
                         value={quantity}
-                        onChange={e => setQty(product._id, Math.max(1, Number(e.target.value || 1)))}
+                        onChange={e => onChangeQty(product, e.target.value)}
                         className="input w-24"
                       />
                     </td>
                     <td className="text-right font-semibold">{money(product.price * quantity)}</td>
                     <td className="text-right">
-                      <button className="btn" onClick={() => remove(product._id)}>Quitar</button>
+                      <button className="btn" onClick={() => onRemove(product)}>Quitar</button>
                     </td>
                   </tr>
                 ))}
@@ -83,7 +95,7 @@ export default function CartPage() {
           </div>
 
           <form onSubmit={checkout} className="card space-y-4">
-            {error ? <div className="text-red-400 text-sm">{error}</div> : null}
+            {error ? <div className="text-red-500 text-sm">{error}</div> : null}
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold">Total</div>
               <div className="text-2xl font-bold">{money(total)}</div>
@@ -93,7 +105,7 @@ export default function CartPage() {
               <div>
                 <label className="block text-sm mb-1">Customer ID (Mongo ObjectId)</label>
                 <input className="input" value={customerId} onChange={e=>setCustomerId(e.target.value)} required />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs" style={{color:"rgb(var(--muted) / 1)"}}>
                   Puedes usar el valor por defecto si no manejas clientes.
                 </p>
               </div>
@@ -124,7 +136,7 @@ export default function CartPage() {
         actions={<button className="btn btn-primary" onClick={() => setSuccess(null)}>Aceptar</button>}
       >
         <p>Tu compra se ha procesado correctamente.</p>
-        {success?._id ? <p className="text-sm text-gray-400">ID de venta: <span className="font-mono">{String(success._id)}</span></p> : null}
+        {success?._id ? <p className="text-sm" style={{color:"rgb(var(--muted) / 1)"}}>ID de venta: <span className="font-mono">{String(success._id)}</span></p> : null}
       </Modal>
     </div>
   );
